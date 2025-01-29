@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
-const { program } = require('commander');
-const Conf = require('conf');
-const chalk = require('chalk');
-const fetch = require('node-fetch');
+import { Command } from 'commander';
+import Conf from 'conf';
+import chalk from 'chalk';
+import fetch from 'node-fetch';
+
+const program = new Command();
 
 const config = new Conf({
     projectName: 'lib-check',
