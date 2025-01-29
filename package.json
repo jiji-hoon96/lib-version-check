@@ -1,6 +1,6 @@
 {
   "name": "@jiji-hoon96/lib-check",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "bin": {
     "lib-check": "./index.js"
