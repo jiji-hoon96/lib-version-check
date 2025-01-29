@@ -1,5 +1,5 @@
 {
-  "name": "jiji-hoon96/lib-check",
+  "name": "@jiji-hoon96/lib-check",
   "version": "1.0.0",
   "bin": {
     "lib-check": "./bin/index.js"
