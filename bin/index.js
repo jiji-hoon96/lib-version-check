@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 
 import { Command } from 'commander';
 import Conf from 'conf';
@@ -41,10 +40,7 @@ async function getUserId() {
 
 async function searchNpmPackages(searchText) {
     try {
-        if (!searchText) return [];
-
-        if(searchText.length < 3) {
-            console.log(chalk.yellow('Please enter at least 3 characters'));
+        if (!searchText || searchText.length < 3) {
             return [];
         }
 
@@ -155,7 +151,6 @@ program
                 }
             ]);
 
-            // Ensure libraries.userId exists and is an array
             const userLibraries = config.get(`libraries.${userId}`) || [];
 
             if (!Array.isArray(userLibraries)) {
@@ -178,7 +173,6 @@ program
     .description('List all watched libraries')
     .action(async () => {
         const userId = await getUserId();
-        // Ensure we're getting an array, default to empty array if not found
         const userLibraries = config.get(`libraries.${userId}`) || [];
 
         console.log(chalk.blue(`Watched libraries for user "${userId}":`));
