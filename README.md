@@ -1,10 +1,13 @@
 # lib-check
 
+[한국어](./README.ko.md)
+
 A command-line tool to easily track and check versions of your favorite NPM libraries.
 
 ## Features
 
-- Maintain a watchlist of NPM libraries
+- Track NPM libraries by user
+- Autocomplete search for NPM packages
 - Check latest versions of libraries
 - View last update dates
 - Get library descriptions
@@ -18,6 +21,9 @@ npm install -g @jiji-hoon96/lib-check
 
 ## Usage
 
+### Set User ID
+When you run any command for the first time, you'll be prompted to enter a user ID. This ID is used to maintain separate library lists for different users.
+
 ### View Help
 ```bash
 lib-check --help
@@ -25,12 +31,10 @@ lib-check --help
 
 ### Add Libraries to Watch
 ```bash
-lib-check add <library-name>
+lib-check add
 
-# Examples
-lib-check add react
-lib-check add next
-lib-check add tailwindcss
+# Interactive autocomplete search will start
+# Type at least 3 characters to search for packages
 ```
 
 ### View Watched Libraries
@@ -46,13 +50,25 @@ This command shows the following information for each watched library:
 - Current version
 - Last update date
 - Library description
+- Homepage (if available)
 
 ### Remove Libraries
 ```bash
-lib-check remove <library-name>
+lib-check remove
 
-# Example
-lib-check remove react
+# Interactive selection will appear
+```
+
+### Manage Configuration
+```bash
+# Show current configuration
+lib-check config --show
+
+# Change user ID
+lib-check config --change
+
+# Reset all configuration
+lib-check config --reset
 ```
 
 ## Using with npx
@@ -61,7 +77,7 @@ You can also use the tool without global installation:
 
 ```bash
 npx @jiji-hoon96/lib-check --help
-npx @jiji-hoon96/lib-check add react
+npx @jiji-hoon96/lib-check add
 npx @jiji-hoon96/lib-check list
 npx @jiji-hoon96/lib-check check
 ```
@@ -69,16 +85,13 @@ npx @jiji-hoon96/lib-check check
 ## Example Output
 
 ```bash
-$ lib-check add react
-Successfully added react to watch list
-
-$ lib-check add next
-Successfully added next to watch list
+$ lib-check add
+? Search for a package: react
+Successfully added react to your watch list
 
 $ lib-check list
-Your watched libraries:
+Watched libraries for user "your-user-id":
 - react
-- next
 
 $ lib-check check
 Fetching library information...
@@ -87,19 +100,16 @@ react:
   Current version: 18.2.0
   Last updated: 2023-06-14
   Description: React is a JavaScript library for building user interfaces.
-
-next:
-  Current version: 14.0.4
-  Last updated: 2023-12-19
-  Description: The React Framework for Production
+  Homepage: https://reactjs.org
 ```
 
 ## Why lib-check?
 
-- **Save Time**: Quickly check library versions without visiting npm websites
-- **Stay Updated**: Easily track multiple libraries' updates
-- **Simple Interface**: Intuitive commands make it easy to use
+- **User-Specific Lists**: Each user can maintain their own list of watched libraries
+- **Easy Search**: Autocomplete search makes finding packages simple
+- **Stay Updated**: Quickly check if your favorite libraries have updates
 - **Efficient**: Get all important information in one place
+- **Simple Interface**: Intuitive commands make it easy to use
 
 ## Contributing
 
