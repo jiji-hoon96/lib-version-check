@@ -1,4 +1,4 @@
-# lib-check
+# lib-version-check
 
 [English](./README.md)
 
@@ -16,7 +16,7 @@ NPM 라이브러리의 버전을 쉽게 추적하고 확인할 수 있는 커맨
 ## 설치 방법
 
 ```bash
-npm install -g @jiji-hoon96/lib-check
+npm install -g lib-version-check
 ```
 
 ## 사용 방법
@@ -76,10 +76,10 @@ lib-check config --reset
 전역 설치 없이 다음과 같이 사용할 수도 있습니다:
 
 ```bash
-npx @jiji-hoon96/lib-check --help
-npx @jiji-hoon96/lib-check add
-npx @jiji-hoon96/lib-check list
-npx @jiji-hoon96/lib-check check
+npx lib-version-check --help
+npx lib-version-check add
+npx lib-version-check list
+npx lib-version-check check
 ```
 
 ## 사용 예시
@@ -103,7 +103,7 @@ react:
   홈페이지: https://reactjs.org
 ```
 
-## lib-check를 사용해야 하는 이유
+## lib-version-check를 사용해야 하는 이유
 
 - **사용자별 목록**: 각 사용자가 자신만의 라이브러리 목록을 관리할 수 있습니다
 - **쉬운 검색**: 자동완성 검색으로 패키지를 쉽게 찾을 수 있습니다

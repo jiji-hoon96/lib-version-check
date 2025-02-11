@@ -1,4 +1,4 @@
-# lib-check
+# lib-version-check
 
 [한국어](./README.ko.md)
 
@@ -16,7 +16,7 @@ A command-line tool to easily track and check versions of your favorite NPM libr
 ## Installation
 
 ```bash
-npm install -g @jiji-hoon96/lib-check
+npm install -g lib-version-check
 ```
 
 ## Usage
@@ -76,10 +76,10 @@ lib-check config --reset
 You can also use the tool without global installation:
 
 ```bash
-npx @jiji-hoon96/lib-check --help
-npx @jiji-hoon96/lib-check add
-npx @jiji-hoon96/lib-check list
-npx @jiji-hoon96/lib-check check
+npx lib-version-check --help
+npx lib-version-check add
+npx lib-version-check list
+npx lib-version-check check
 ```
 
 ## Example Output
@@ -103,7 +103,7 @@ react:
   Homepage: https://reactjs.org
 ```
 
-## Why lib-check?
+## Why lib-version-check?
 
 - **User-Specific Lists**: Each user can maintain their own list of watched libraries
 - **Easy Search**: Autocomplete search makes finding packages simple
