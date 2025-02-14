@@ -6,6 +6,9 @@ import chalk from 'chalk';
 import fetch from 'node-fetch';
 import inquirer from 'inquirer';
 import inquirerAutocomplete from 'inquirer-autocomplete-prompt';
+import {PRESETS} from "./presets.js";
+import {analyzeDependencies} from "./dependencyAnalyzer.js";
+import {getUpdateType} from "./versionUtils.js";
 
 const program = new Command();
 inquirer.registerPrompt('autocomplete', inquirerAutocomplete);
@@ -170,6 +173,42 @@ program
     });
 
 program
+    .command('preset')
+    .description('Add a preset group of libraries to watch list')
+    .action(async () => {
+        const userId = await getUserId();
+
+        const answer = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'preset',
+                message: 'Select a preset to add:',
+                choices: Object.entries(PRESETS).map(([key, value]) => ({
+                    name: value.name,
+                    value: key
+                }))
+            }
+        ]);
+
+        const selectedPreset = PRESETS[answer.preset];
+        const userLibraries = new Set(config.get(`libraries.${userId}`) || []);
+
+        console.log(chalk.blue(`Adding ${selectedPreset.name} packages...`));
+
+        for (const pkg of selectedPreset.packages) {
+            if (!userLibraries.has(pkg)) {
+                userLibraries.add(pkg);
+                console.log(chalk.green(`Added ${pkg}`));
+            } else {
+                console.log(chalk.yellow(`${pkg} is already in your watch list`));
+            }
+        }
+
+        config.set(`libraries.${userId}`, Array.from(userLibraries));
+        console.log(chalk.green('\nPreset added successfully!'));
+    });
+
+program
     .command('list')
     .description('List all watched libraries')
     .action(async () => {
@@ -216,9 +255,11 @@ program
 program
     .command('check')
     .description('Check versions of all watched libraries')
-    .action(async () => {
+    .option('-d, --detailed', 'Show detailed dependency information')
+    .action(async (options) => {
         const userId = await getUserId();
         const userLibraries = config.get(`libraries.${userId}`) || [];
+        const savedVersions = config.get(`versions.${userId}`) || {};
 
         if (userLibraries.length === 0) {
             console.log(chalk.yellow('No libraries in your watch list. Add one with: lib-check add'));
@@ -232,14 +273,57 @@ program
             if (info) {
                 console.log(chalk.green(`${info.name}:`));
                 console.log(`  Current version: ${info.currentVersion}`);
+
+                if (savedVersions[lib]) {
+                    const updateType = getUpdateType(savedVersions[lib], info.currentVersion);
+                    if (updateType !== 'NONE') {
+                        console.log(chalk.yellow(`  Update available: ${savedVersions[lib]} → ${info.currentVersion} (${updateType})`));
+                    }
+                }
+
                 console.log(`  Last updated: ${info.lastUpdate}`);
                 console.log(`  Description: ${info.description}`);
+
+                if (options.detailed) {
+                    const deps = await analyzeDependencies(lib, info.currentVersion);
+                    if (deps) {
+                        if (deps.bundleSize) {
+                            console.log(`  Bundle size: ${(deps.
+                                bundleSize.size / 1024).toFixed(1)}KB (${(deps.bundleSize.gzip / 1024).toFixed(1)}KB gzipped)`);
+                        }
+                        if (deps.vulnerabilities && deps.vulnerabilities.length > 0) {
+                            console.log(chalk.red(`  Vulnerabilities found: ${deps.vulnerabilities.length}`));
+                        }
+                        console.log('  Dependencies:', Object.keys(deps.dependencies).length);
+                        console.log('  Peer Dependencies:', Object.keys(deps.peerDependencies).length);
+                    }
+                }
+
                 if (info.homepage) {
                     console.log(`  Homepage: ${info.homepage}`);
                 }
                 console.log('');
             }
         }
+    });
+
+program
+    .command('save-versions')
+    .description('Save current versions as reference for future comparisons')
+    .action(async () => {
+        const userId = await getUserId();
+        const userLibraries = config.get(`libraries.${userId}`) || [];
+        const versions = {};
+
+        for (const lib of userLibraries) {
+            const info = await fetchPackageInfo(lib);
+            if (info) {
+                versions[lib] = info.currentVersion;
+            }
+        }
+
+        config.set(`versions.${userId}`, versions);
+        console.log(chalk.green('Current versions saved as reference'));
     });
 
 program.parse(process.argv);
