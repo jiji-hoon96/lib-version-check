@@ -326,4 +326,113 @@ program
         console.log(chalk.green('Current versions saved as reference'));
     });
 
+program
+    .command('preview')
+    .description('Preview information about packages in a preset without adding them')
+    .option('-d, --detailed', 'Show detailed dependency information')
+    .action(async (options) => {
+        try {
+            const answer = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'preset',
+                    message: 'Select a preset to preview:',
+                    choices: Object.entries(PRESETS).map(([key, value]) => ({
+                        name: `${value.name} (${value.packages.length} packages)`,
+                        value: key
+                    }))
+                }
+            ]);
+
+            const selectedPreset = PRESETS[answer.preset];
+
+            console.log(chalk.blue(`\nPreviewing ${selectedPreset.name}:`));
+            console.log(chalk.dim('This will show information about the preset packages without adding them to your watch list.\n'));
+
+            console.log(chalk.yellow('Calculating total bundle size and analyzing dependencies...\n'));
+
+            let totalSize = 0;
+            let totalGzip = 0;
+            let totalDependencies = new Set();
+            let totalPeerDependencies = new Set();
+
+            for (const pkg of selectedPreset.packages) {
+                const info = await fetchPackageInfo(pkg);
+                if (info) {
+                    console.log(chalk.green(`${info.name}:`));
+                    console.log(`  Current version: ${info.currentVersion}`);
+                    console.log(`  Last updated: ${info.lastUpdate}`);
+                    console.log(`  Description: ${info.description}`);
+
+                    if (options.detailed) {
+                        const deps = await analyzeDependencies(pkg, info.currentVersion);
+                        if (deps) {
+                            if (deps.bundleSize) {
+                                const sizeKB = (deps.bundleSize.size / 1024).toFixed(1);
+                                const gzipKB = (deps.bundleSize.gzip / 1024).toFixed(1);
+                                console.log(`  Bundle size: ${sizeKB}KB (${gzipKB}KB gzipped)`);
+                                totalSize += deps.bundleSize.size;
+                                totalGzip += deps.bundleSize.gzip;
+                            }
+
+                            // Collect all dependencies
+                            Object.keys(deps.dependencies || {}).forEach(dep => totalDependencies.add(dep));
+                            Object.keys(deps.peerDependencies || {}).forEach(dep => totalPeerDependencies.add(dep));
+
+                            console.log(`  Dependencies: ${Object.keys(deps.dependencies || {}).length}`);
+                            console.log(`  Peer Dependencies: ${Object.keys(deps.peerDependencies || {}).length}`);
+                        }
+                    }
+
+                    if (info.homepage) {
+                        console.log(`  Homepage: ${info.homepage}`);
+                    }
+                    console.log('');
+                }
+            }
+
+            console.log(chalk.blue('\nPreset Summary:'));
+            console.log(`Total packages: ${selectedPreset.packages.length}`);
+            if (options.detailed) {
+                console.log(`Total unique dependencies: ${totalDependencies.size}`);
+                console.log(`Total unique peer dependencies: ${totalPeerDependencies.size}`);
+                console.log(`Total bundle size: ${(totalSize / 1024).toFixed(1)}KB (${(totalGzip / 1024).toFixed(1)}KB gzipped)`);
+            }
+
+            const actionAnswer = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'action',
+                    message: 'What would you like to do?',
+                    choices: [
+                        { name: 'Add this preset to my watch list', value: 'add' },
+                        { name: 'Preview another preset', value: 'preview' },
+                        { name: 'Exit', value: 'exit' }
+                    ]
+                }
+            ]);
+
+            if (actionAnswer.action === 'add') {
+                const userId = await getUserId();
+                const userLibraries = new Set(config.get(`libraries.${userId}`) || []);
+
+                for (const pkg of selectedPreset.packages) {
+                    if (!userLibraries.has(pkg)) {
+                        userLibraries.add(pkg);
+                        console.log(chalk.green(`Added ${pkg}`));
+                    } else {
+                        console.log(chalk.yellow(`${pkg} is already in your watch list`));
+                    }
+                }
+
+                config.set(`libraries.${userId}`, Array.from(userLibraries));
+                console.log(chalk.green('\nPreset added successfully!'));
+            } else if (actionAnswer.action === 'preview') {
+                await program.commands.find(cmd => cmd.name() === 'preview').action(options);
+            }
+        } catch (error) {
+            console.error(chalk.red('Error previewing preset:', error.message));
+        }
+    });
+
 program.parse(process.argv);
