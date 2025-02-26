@@ -13,6 +13,29 @@ A command-line tool to easily track and check versions of your favorite NPM libr
 - Get library descriptions
 - Simple and intuitive commands
 
+## Community Contributions
+
+### Preset Stacks
+We love community contributions! Want to add a new preset stack for your favorite technology combination?
+
+🚀 [See our Contribution Guide](CONTRIBUTING.md) to learn how to add new presets!
+
+- Contribute new frontend, backend, testing, or infrastructure presets
+- Help expand our library of technology stacks
+- Share your expertise with the community
+
+### How to Contribute
+1. Check out our [Contribution Guidelines](CONTRIBUTING.md)
+2. Fork the repository
+3. Add your preset to `presets.js`
+4. Open a Pull Request
+
+## Contributing
+
+Found a bug or want to suggest a new feature?
+- [Open an Issue](https://github.com/jiji-hoon96/lib-version-check/issues)
+- [Read Contributing Guidelines](CONTRIBUTING.md)
+
 ## Installation
 
 ```bash
