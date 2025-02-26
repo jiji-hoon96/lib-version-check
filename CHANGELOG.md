@@ -1,10 +1,33 @@
 # Changelog
 
+## [1.3.0] - 2024-02-26
+### Added
+- Expanded preset categories to include frontend, backend, infrastructure, testing, and state management
+- Created comprehensive contribution guidelines for community preset additions
+- Implemented multi-level preset exploration with interactive navigation
+- Added detailed preset package information display
+- Enhanced user experience in preset selection workflow
+- Introduced ability to preview and selectively add library stacks
+
+### Changed
+- Restructured preset system to support more diverse technology stacks
+- Updated README with community contribution information
+- Improved preset command interaction and navigation
+
 ## [1.2.0] - 2024-02-20
 ### Added
-- Added preset preview command with detailed analysis
-- Added total bundle size calculation for presets
-- Added dependency analysis for preset packages
+- Added comprehensive preset exploration feature
+- Created detailed contribution guidelines (CONTRIBUTING.md)
+- Enhanced preset command with interactive navigation
+- Added ability to preview preset library stacks before adding
+- Implemented multiple navigation options in preset explorer
+- Added support for community-driven preset contributions
+
+### Changed
+- Improved preset selection workflow
+- Expanded preset categories and library collections
+- Updated README with contribution information
+- Enhanced user interaction in preset selection process
 
 ## [1.1.0] - 2024-02-14
 ### Added
