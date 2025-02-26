@@ -21,6 +21,15 @@
     "npm-tool",
     "development-tool"
   ],
+  "scripts": {
+    "lint": "biome lint .",
+    "format": "biome format . --write",
+    "check": "biome check .",
+    "biome:ci": "biome ci .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
   "author": "jiji-hoon96",
   "license": "MIT",
   "repository": {
@@ -37,7 +46,10 @@
     "conf": "^12.0.0",
     "inquirer": "^9.2.12",
     "inquirer-autocomplete-prompt": "^3.0.0",
-    "lib-version-check": "^1.0.0",
     "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.5.3",
+    "vitest": "^1.2.0"
   }
 }
