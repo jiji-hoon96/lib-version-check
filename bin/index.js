@@ -191,10 +191,36 @@ program
                             name: category.charAt(0).toUpperCase() + category.slice(1),
                             value: category
                         })),
+                        { name: 'Adding your own presets', value: 'contribute' },
                         { name: 'Exit Preset Explorer', value: 'exit' }
                     ]
                 }
             ]);
+
+            // Handle contribution option
+            if (categoryAnswer.category === 'contribute') {
+                console.log(chalk.blue('\n🚀 Contribute Your Preset Stack\n'));
+                console.log(chalk.green('How to Add a New Preset:'));
+                console.log('1. Visit the GitHub repository:');
+                console.log(chalk.yellow('   https://github.com/jiji-hoon96/lib-version-check/pulls\n'));
+                console.log(chalk.green('Contribution Steps:'));
+                console.log('- Fork the repository');
+                console.log('- Modify the `presets.js` file');
+                console.log('- Create a pull request with your new preset stack\n');
+                console.log(chalk.blue('🔗 Direct PR Link:'));
+                console.log(chalk.yellow('https://github.com/jiji-hoon96/lib-version-check/compare\n'));
+
+                const continueAnswer = await inquirer.prompt([
+                    {
+                        type: 'confirm',
+                        name: 'continue',
+                        message: 'Would you like to go back to preset explorer?',
+                        default: true
+                    }
+                ]);
+
+                return continueAnswer.continue;
+            }
 
             // Exit if selected
             if (categoryAnswer.category === 'exit') {
@@ -213,10 +239,36 @@ program
                             name: value.name,
                             value: key
                         })),
-                        { name: '⬅️ Back to Categories', value: 'back' }
+                        { name: '⬅️ Back to Categories', value: 'back' },
+                        { name: '🆕 Adding your own presets', value: 'contribute' }
                     ]
                 }
             ]);
+
+            // Handle contribution option
+            if (presetAnswer.preset === 'contribute') {
+                console.log(chalk.blue('\n🚀 Contribute Your Preset Stack\n'));
+                console.log(chalk.green('How to Add a New Preset:'));
+                console.log('1. Visit the GitHub repository:');
+                console.log(chalk.yellow('   https://github.com/jiji-hoon96/lib-version-check/pulls\n'));
+                console.log(chalk.green('Contribution Steps:'));
+                console.log('- Fork the repository');
+                console.log('- Modify the `presets.js` file');
+                console.log('- Create a pull request with your new preset stack\n');
+                console.log(chalk.blue('🔗 Direct PR Link:'));
+                console.log(chalk.yellow('https://github.com/jiji-hoon96/lib-version-check/compare\n'));
+
+                const continueAnswer = await inquirer.prompt([
+                    {
+                        type: 'confirm',
+                        name: 'continue',
+                        message: 'Would you like to go back to preset explorer?',
+                        default: true
+                    }
+                ]);
+
+                return continueAnswer.continue;
+            }
 
             // Go back to category selection if selected
             if (presetAnswer.preset === 'back') {
@@ -264,6 +316,7 @@ program
                     choices: [
                         { name: 'Add all packages to my watch list', value: 'add' },
                         { name: 'Explore another preset', value: 'explore' },
+                        { name: 'Adding your own presets', value: 'contribute' },
                         { name: 'Exit Preset Explorer', value: 'exit' }
                     ]
                 }
@@ -286,6 +339,28 @@ program
                 case 'explore':
                     // Continue exploring
                     return true;
+                case 'contribute':
+                    console.log(chalk.blue('\n🚀 Contribute Your Preset Stack\n'));
+                    console.log(chalk.green('How to Add a New Preset:'));
+                    console.log('1. Visit the GitHub repository:');
+                    console.log(chalk.yellow('   https://github.com/jiji-hoon96/lib-version-check/pulls\n'));
+                    console.log(chalk.green('Contribution Steps:'));
+                    console.log('- Fork the repository');
+                    console.log('- Modify the `presets.js` file');
+                    console.log('- Create a pull request with your new preset stack\n');
+                    console.log(chalk.blue('🔗 Direct PR Link:'));
+                    console.log(chalk.yellow('https://github.com/jiji-hoon96/lib-version-check/compare\n'));
+
+                    const continueAnswer = await inquirer.prompt([
+                        {
+                            type: 'confirm',
+                            name: 'continue',
+                            message: 'Would you like to go back to preset explorer?',
+                            default: true
+                        }
+                    ]);
+
+                    return continueAnswer.continue;
                 case 'exit':
                     console.log(chalk.blue('Exiting preset explorer.'));
                     return false;
