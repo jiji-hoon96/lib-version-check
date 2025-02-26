@@ -174,38 +174,131 @@ program
 
 program
     .command('preset')
-    .description('Add a preset group of libraries to watch list')
+    .description('Explore preset library stacks and their details')
     .action(async () => {
         const userId = await getUserId();
-
-        const answer = await inquirer.prompt([
-            {
-                type: 'list',
-                name: 'preset',
-                message: 'Select a preset to add:',
-                choices: Object.entries(PRESETS).map(([key, value]) => ({
-                    name: value.name,
-                    value: key
-                }))
-            }
-        ]);
-
-        const selectedPreset = PRESETS[answer.preset];
         const userLibraries = new Set(config.get(`libraries.${userId}`) || []);
 
-        console.log(chalk.blue(`Adding ${selectedPreset.name} packages...`));
+        async function explorePresets() {
+            // First, choose a category
+            const categoryAnswer = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'category',
+                    message: 'Select a technology category:',
+                    choices: [
+                        ...Object.keys(PRESETS).map(category => ({
+                            name: category.charAt(0).toUpperCase() + category.slice(1),
+                            value: category
+                        })),
+                        { name: 'Exit Preset Explorer', value: 'exit' }
+                    ]
+                }
+            ]);
 
-        for (const pkg of selectedPreset.packages) {
-            if (!userLibraries.has(pkg)) {
-                userLibraries.add(pkg);
-                console.log(chalk.green(`Added ${pkg}`));
-            } else {
-                console.log(chalk.yellow(`${pkg} is already in your watch list`));
+            // Exit if selected
+            if (categoryAnswer.category === 'exit') {
+                console.log(chalk.blue('Exiting preset explorer.'));
+                return false;
             }
+
+            // Then, choose a specific preset within that category
+            const presetAnswer = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'preset',
+                    message: 'Select a preset stack:',
+                    choices: [
+                        ...Object.entries(PRESETS[categoryAnswer.category]).map(([key, value]) => ({
+                            name: value.name,
+                            value: key
+                        })),
+                        { name: '⬅️ Back to Categories', value: 'back' }
+                    ]
+                }
+            ]);
+
+            // Go back to category selection if selected
+            if (presetAnswer.preset === 'back') {
+                return true;
+            }
+
+            const selectedPreset = PRESETS[categoryAnswer.category][presetAnswer.preset];
+
+            console.log(chalk.blue(`\n📦 ${selectedPreset.name} Details:\n`));
+
+            // Fetch and display package information
+            const packageDetails = [];
+            for (const pkg of selectedPreset.packages) {
+                try {
+                    const info = await fetchPackageInfo(pkg);
+                    if (info) {
+                        packageDetails.push({
+                            name: pkg,
+                            version: info.currentVersion,
+                            description: info.description,
+                            lastUpdated: info.lastUpdate,
+                            inWatchList: userLibraries.has(pkg)
+                        });
+                    }
+                } catch (error) {
+                    console.error(chalk.red(`Error fetching info for ${pkg}: ${error.message}`));
+                }
+            }
+
+            // Display package details in a table-like format
+            packageDetails.forEach(pkg => {
+                console.log(chalk.green(`${pkg.name}${pkg.inWatchList ? chalk.yellow(' (Already in watch list)') : ''}:`));
+                console.log(`  Version:      ${pkg.version}`);
+                console.log(`  Last Updated: ${pkg.lastUpdated}`);
+                console.log(`  Description:  ${pkg.description}`);
+                console.log('');
+            });
+
+            // Ask what to do next
+            const actionAnswer = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'action',
+                    message: 'What would you like to do?',
+                    choices: [
+                        { name: 'Add all packages to my watch list', value: 'add' },
+                        { name: 'Explore another preset', value: 'explore' },
+                        { name: 'Exit Preset Explorer', value: 'exit' }
+                    ]
+                }
+            ]);
+
+            switch (actionAnswer.action) {
+                case 'add':
+                    // Add packages to watch list
+                    for (const pkg of selectedPreset.packages) {
+                        if (!userLibraries.has(pkg)) {
+                            userLibraries.add(pkg);
+                            console.log(chalk.green(`Added ${pkg} to your watch list`));
+                        } else {
+                            console.log(chalk.yellow(`${pkg} is already in your watch list`));
+                        }
+                    }
+                    config.set(`libraries.${userId}`, Array.from(userLibraries));
+                    console.log(chalk.blue('\n✅ Packages added to your watch list!'));
+                    break;
+                case 'explore':
+                    // Continue exploring
+                    return true;
+                case 'exit':
+                    console.log(chalk.blue('Exiting preset explorer.'));
+                    return false;
+            }
+
+            // By default, continue exploring
+            return true;
         }
 
-        config.set(`libraries.${userId}`, Array.from(userLibraries));
-        console.log(chalk.green('\nPreset added successfully!'));
+        // Keep exploring until user chooses to exit
+        while (await explorePresets()) {
+            // Continues looping until user decides to exit
+        }
     });
 
 program
