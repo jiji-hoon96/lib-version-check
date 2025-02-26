@@ -1,0 +1,101 @@
+name: Deploy to NPM
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '!.github/workflows/deploy.yml'
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Biome checks
+        run: npm run biome:ci
+
+  version-and-publish:
+    name: Version and Publish
+    needs: lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Check for version changes
+        id: check-version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED_VERSION=$(npm view lib-version-check version 2>/dev/null || echo "0.0.0")
+          
+          echo "Current version: $CURRENT_VERSION"
+          echo "Published version: $PUBLISHED_VERSION"
+          
+          if [ "$CURRENT_VERSION" != "$PUBLISHED_VERSION" ]; then
+            echo "Version change detected"
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "No version change detected"
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        if: steps.check-version.outputs.version_changed == 'true'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.check-version.outputs.version }}
+          release_name: Release v${{ steps.check-version.outputs.version }}
+          draft: false
+          prerelease: false
+          body: |
+            See [CHANGELOG.md](https://github.com/jiji-hoon96/lib-version-check/blob/main/CHANGELOG.md) for details.
+
+      - name: Publish to NPM
+        if: steps.check-version.outputs.version_changed == 'true'
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Notify on success
+        if: steps.check-version.outputs.version_changed == 'true'
+        run: |
+          echo "🚀 Version ${{ steps.check-version.outputs.version }} successfully published to NPM!"
+          echo "✅ GitHub Release created: v${{ steps.check-version.outputs.version }}"

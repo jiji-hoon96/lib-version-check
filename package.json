@@ -25,10 +25,7 @@
 		"lint": "biome lint .",
 		"format": "biome format . --write",
 		"check": "biome check .",
-		"biome:ci": "biome ci .",
-		"test": "vitest run",
-		"test:watch": "vitest",
-		"test:coverage": "vitest run --coverage"
+		"biome:ci": "biome ci ."
 	},
 	"author": "jiji-hoon96",
 	"license": "MIT",
@@ -49,7 +46,6 @@
 		"node-fetch": "^3.3.2"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.5.3",
-		"vitest": "^1.2.0"
+		"@biomejs/biome": "1.5.3"
 	}
 }
