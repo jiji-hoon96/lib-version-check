@@ -27,9 +27,6 @@
     "lineWidth": 100
   },
   "javascript": {
-    "parser": {
-      "unsafeAllowHTML": true
-    },
     "formatter": {
       "quoteStyle": "single",
       "trailingComma": "es5",
