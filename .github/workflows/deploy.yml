@@ -72,9 +72,59 @@ jobs:
           # 결과 저장
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           
-          # 변경 사항 커밋
-          git add package.json
-          git commit -m "Bump version to $NEW_VERSION [skip ci]"
+          # 마지막 태그로부터 현재까지의 커밋 메시지 가져오기
+          COMMIT_LOG=$(git log $(git describe --tags --abbrev=0 2>/dev/null || echo HEAD~10)..HEAD --pretty=format:"- %s" | grep -v "Bump version" | grep -v "Merge")
+          echo "commit_log<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMIT_LOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Update CHANGELOG.md
+        run: |
+          NEW_VERSION="${{ steps.version-update.outputs.version }}"
+          COMMIT_LOG="${{ steps.version-update.outputs.commit_log }}"
+          DATE=$(date +%Y-%m-%d)
+          
+          # 변경 로그 항목 생성
+          CHANGELOG_ENTRY="## [$NEW_VERSION] - $DATE\n"
+          
+          # 커밋 로그를 기능별로 분류
+          FEATURES=$(echo "$COMMIT_LOG" | grep -i "feat\|feature\|add" || echo "")
+          FIXES=$(echo "$COMMIT_LOG" | grep -i "fix\|bug\|issue" || echo "")
+          REFACTORS=$(echo "$COMMIT_LOG" | grep -i "refactor" || echo "")
+          OTHERS=$(echo "$COMMIT_LOG" | grep -v -i "feat\|feature\|add\|fix\|bug\|issue\|refactor" || echo "")
+          
+          # 기능 추가 섹션
+          if [ ! -z "$FEATURES" ]; then
+            CHANGELOG_ENTRY="${CHANGELOG_ENTRY}### Added\n$FEATURES\n\n"
+          fi
+          
+          # 버그 수정 섹션
+          if [ ! -z "$FIXES" ]; then
+            CHANGELOG_ENTRY="${CHANGELOG_ENTRY}### Fixed\n$FIXES\n\n"
+          fi
+          
+          # 리팩토링 섹션
+          if [ ! -z "$REFACTORS" ]; then
+            CHANGELOG_ENTRY="${CHANGELOG_ENTRY}### Changed\n$REFACTORS\n\n"
+          fi
+          
+          # 기타 변경 섹션
+          if [ ! -z "$OTHERS" ]; then
+            CHANGELOG_ENTRY="${CHANGELOG_ENTRY}### Other\n$OTHERS\n\n"
+          fi
+          
+          # CHANGELOG.md 파일 업데이트
+          if [ -f CHANGELOG.md ]; then
+            # 기존 파일이 있으면 새 항목을 상단에 추가
+            sed -i "1s/^/# Changelog\n\n$CHANGELOG_ENTRY/" CHANGELOG.md
+          else
+            # 파일이 없으면 새로 생성
+            echo -e "# Changelog\n\n$CHANGELOG_ENTRY" > CHANGELOG.md
+          fi
+          
+          # 변경된 파일 커밋
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG.md for version $NEW_VERSION [skip ci]"
           git tag v$NEW_VERSION
 
       - name: Push changes
