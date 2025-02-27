@@ -2,7 +2,7 @@
 
 ## [1.3.4] - 2025-02-27
 ### Fixed
-- fix : changelog.md deploy 자동화
+- Automate changelog.md deployment
 
 # Changelog
 
