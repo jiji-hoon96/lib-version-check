@@ -55,45 +55,44 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
-      - name: Check for version changes
-        id: check-version
+      - name: Auto-increment version
+        id: version-update
         run: |
+          # 현재 버전 가져오기
           CURRENT_VERSION=$(node -p "require('./package.json').version")
-          PUBLISHED_VERSION=$(npm view lib-version-check version 2>/dev/null || echo "0.0.0")
-          
           echo "Current version: $CURRENT_VERSION"
-          echo "Published version: $PUBLISHED_VERSION"
           
-          if [ "$CURRENT_VERSION" != "$PUBLISHED_VERSION" ]; then
-            echo "Version change detected"
-            echo "version_changed=true" >> $GITHUB_OUTPUT
-            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "No version change detected"
-            echo "version_changed=false" >> $GITHUB_OUTPUT
-          fi
+          # 패치 버전 증가 (예: 1.3.1 -> 1.3.2)
+          npm version patch --no-git-tag-version
+          
+          # 업데이트된 버전 가져오기
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "New version: $NEW_VERSION"
+          
+          # 결과 저장
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          
+          # 변경 사항 커밋
+          git add package.json
+          git commit -m "Bump version to $NEW_VERSION [skip ci]"
+          git tag v$NEW_VERSION
+
+      - name: Push changes
+        run: git push && git push --tags
 
       - name: Create GitHub Release
-        if: steps.check-version.outputs.version_changed == 'true'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.check-version.outputs.version }}
-          release_name: Release v${{ steps.check-version.outputs.version }}
+          tag_name: v${{ steps.version-update.outputs.version }}
+          release_name: Release v${{ steps.version-update.outputs.version }}
           draft: false
           prerelease: false
           body: |
             See [CHANGELOG.md](https://github.com/jiji-hoon96/lib-version-check/blob/main/CHANGELOG.md) for details.
 
       - name: Publish to NPM
-        if: steps.check-version.outputs.version_changed == 'true'
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Notify on success
-        if: steps.check-version.outputs.version_changed == 'true'
-        run: |
-          echo "🚀 Version ${{ steps.check-version.outputs.version }} successfully published to NPM!"
-          echo "✅ GitHub Release created: v${{ steps.check-version.outputs.version }}"
