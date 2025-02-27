@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.4] - 2025-02-27
+### Fixed
+- fix : changelog.md deploy 자동화
+
+# Changelog
+
 ## [1.3.0] - 2024-02-26
 ### Added
 - Expanded preset categories to include frontend, backend, infrastructure, testing, and state management
