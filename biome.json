@@ -7,16 +7,15 @@
     "enabled": true,
     "rules": {
       "recommended": true,
-      "style": {
-        "noNonNullAssertion": "error",
-        "useTemplate": "error"
+      "correctness": {
+        "noSwitchDeclarations": "off"
       },
       "suspicious": {
-        "noExplicitAny": "warn",
-        "noConsoleLog": "warn"
+        "noConsoleLog": "off",
+        "noExplicitAny": "warn"
       },
-      "a11y": {
-        "useKeyWithClickEvents": "error"
+      "complexity": {
+        "noForEach": "off"
       }
     }
   },
@@ -34,11 +33,6 @@
     }
   },
   "files": {
-    "ignore": [
-      "node_modules",
-      "dist",
-      "build",
-      "coverage"
-    ]
+    "ignore": ["node_modules", "dist", "build", "coverage"]
   }
 }

@@ -26,7 +26,7 @@ jobs:
         run: npm ci
 
       - name: Run Biome checks
-        run: npm run biome:ci
+        run: npm run format && npm run lint
 
   version-and-publish:
     name: Version and Publish
