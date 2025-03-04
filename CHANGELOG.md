@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.5] - 2025-03-04
+### Fixed
+- fix: deploy script
+- fix: remove non-NPM package
+- fix: remove non-NPM package
+- fix: remove non-NPM packages from presets
+- fix : Modify the contents of the Changelog.md file
+
+
 ## [1.3.4] - 2025-02-27
 ### Fixed
 - Automate changelog.md deployment
