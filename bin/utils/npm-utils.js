@@ -55,3 +55,14 @@ export async function fetchPackageInfo(packageName) {
     return null;
   }
 }
+
+export async function fetchMultiplePackageInfo(packageNames) {
+  try {
+    const promises = packageNames.map((pkg) => fetchPackageInfo(pkg));
+    const results = await Promise.all(promises);
+    return results.filter((result) => result !== null);
+  } catch (error) {
+    console.error(chalk.red('Error fetching multiple packages:', error.message));
+    return [];
+  }
+}
