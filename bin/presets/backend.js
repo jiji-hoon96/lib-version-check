@@ -1,6 +1,6 @@
 export const backend = {
   'node-express': {
-    name: 'Node.js Express Backend Stack',
+    name: 'Node.js Express',
     packages: [
       'express',
       'mongoose',
@@ -14,7 +14,7 @@ export const backend = {
     ],
   },
   'nest-prisma': {
-    name: 'NestJS Prisma Backend Stack',
+    name: 'NestJS Prisma',
     packages: [
       '@nestjs/core',
       '@nestjs/passport',
