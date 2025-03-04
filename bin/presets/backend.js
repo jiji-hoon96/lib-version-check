@@ -26,29 +26,4 @@ export const backend = {
       'swagger-ui-express',
     ],
   },
-  'django-python': {
-    name: 'Django Python Backend Stack',
-    packages: [
-      'django',
-      'djangorestframework',
-      'django-cors-headers',
-      'django-filter',
-      'psycopg2-binary',
-      'gunicorn',
-      'drf-yasg',
-    ],
-  },
-  'fastapi-python': {
-    name: 'FastAPI Python Backend Stack',
-    packages: [
-      'fastapi',
-      'uvicorn',
-      'sqlalchemy',
-      'pydantic',
-      'alembic',
-      'passlib',
-      'python-jose',
-      'httpx',
-    ],
-  },
 };
