@@ -116,7 +116,10 @@ jobs:
           # CHANGELOG.md 파일 업데이트
           if [ -f CHANGELOG.md ]; then
             # 기존 파일이 있으면 새 항목을 상단에 추가
-            sed -i "1s/^/# Changelog\n\n$CHANGELOG_ENTRY/" CHANGELOG.md
+            # 개행 문자를 올바르게 처리
+            echo -e "# Changelog\n\n$CHANGELOG_ENTRY" > changelog_new.md
+            cat CHANGELOG.md | sed '1,2d' >> changelog_new.md
+            mv changelog_new.md CHANGELOG.md
           else
             # 파일이 없으면 새로 생성
             echo -e "# Changelog\n\n$CHANGELOG_ENTRY" > CHANGELOG.md
