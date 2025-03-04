@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.7] - 2025-03-04
+### Other
+- remove : Delete python list
+
+
 ## [1.3.6] - 2025-03-04
 ### Added
 - feat : Parallelizing the Preview,Check File
