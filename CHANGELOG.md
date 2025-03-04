@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.6] - 2025-03-04
+### Added
+- feat : Parallelizing the Preview,Check File
+- feat : Parallelizing the Check File
+
+
 ## [1.3.5] - 2025-03-04
 ### Fixed
 - fix: deploy script
