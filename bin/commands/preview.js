@@ -1,7 +1,8 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
+import ora from 'ora';
 import { getUserId, addLibrary } from '../utils/user-utils.js';
-import { fetchPackageInfo } from '../utils/npm-utils.js';
+import { fetchPackageInfo, fetchMultiplePackageInfo } from '../utils/npm-utils.js';
 import { PRESETS } from '../presets/index.js';
 import { analyzeDependencies } from '../utils/dependencyAnalyzer.js';
 
@@ -41,52 +42,81 @@ export const previewCommand = {
         )
       );
 
-      console.log(chalk.yellow('Calculating total bundle size and analyzing dependencies...\n'));
+      const infoSpinner = ora(chalk.yellow('Fetching package information...')).start();
+
+      // 병렬로 모든 패키지 정보 가져오기
+      const packagesInfo = await fetchMultiplePackageInfo(selectedPreset.packages);
+
+      infoSpinner.succeed('Package information fetched successfully!');
 
       let totalSize = 0;
       let totalGzip = 0;
       const totalDependencies = new Set();
       const totalPeerDependencies = new Set();
 
-      for (const pkg of selectedPreset.packages) {
-        const info = await fetchPackageInfo(pkg);
-        if (info) {
-          console.log(chalk.green(`${info.name}:`));
-          console.log(`  Current version: ${info.currentVersion}`);
-          console.log(`  Last updated: ${info.lastUpdate}`);
-          console.log(`  Description: ${info.description}`);
+      // 상세 정보가 필요한 경우 병렬로 의존성 정보 가져오기
+      if (options.detailed) {
+        const depSpinner = ora(
+          chalk.yellow('Calculating total bundle size and analyzing dependencies...')
+        ).start();
 
-          if (options.detailed) {
-            const deps = await analyzeDependencies(pkg, info.currentVersion);
-            if (deps) {
-              if (deps.bundleSize) {
-                const sizeKB = (deps.bundleSize.size / 1024).toFixed(1);
-                const gzipKB = (deps.bundleSize.gzip / 1024).toFixed(1);
-                console.log(`  Bundle size: ${sizeKB}KB (${gzipKB}KB gzipped)`);
-                totalSize += deps.bundleSize.size;
-                totalGzip += deps.bundleSize.gzip;
-              }
+        // 모든 패키지 의존성 분석을 병렬로 처리
+        const depsPromises = packagesInfo.map(async (info) => {
+          const deps = await analyzeDependencies(info.name, info.currentVersion);
+          return { name: info.name, deps };
+        });
 
-              // 모든 의존성 수집
-              for (const dep of Object.keys(deps.dependencies || {})) {
-                totalDependencies.add(dep);
-              }
-              for (const dep of Object.keys(deps.peerDependencies || {})) {
-                totalPeerDependencies.add(dep);
-              }
+        const depsResults = await Promise.all(depsPromises);
 
-              console.log(`  Dependencies: ${Object.keys(deps.dependencies || {}).length}`);
-              console.log(
-                `  Peer Dependencies: ${Object.keys(deps.peerDependencies || {}).length}`
-              );
+        // 결과 처리
+        for (const result of depsResults) {
+          if (result.deps) {
+            if (result.deps.bundleSize) {
+              totalSize += result.deps.bundleSize.size;
+              totalGzip += result.deps.bundleSize.gzip;
+            }
+
+            // 모든 의존성 수집
+            for (const dep of Object.keys(result.deps.dependencies || {})) {
+              totalDependencies.add(dep);
+            }
+            for (const dep of Object.keys(result.deps.peerDependencies || {})) {
+              totalPeerDependencies.add(dep);
             }
           }
-
-          if (info.homepage) {
-            console.log(`  Homepage: ${info.homepage}`);
-          }
-          console.log('');
         }
+
+        depSpinner.succeed('Dependencies analyzed successfully!');
+        console.log(''); // 빈 줄 추가
+      }
+
+      // 패키지 정보 표시
+      for (const info of packagesInfo) {
+        console.log(chalk.green(`${info.name}:`));
+        console.log(`  Current version: ${info.currentVersion}`);
+        console.log(`  Last updated: ${info.lastUpdate}`);
+        console.log(`  Description: ${info.description}`);
+
+        if (options.detailed) {
+          // 해당 패키지의 의존성 정보 찾기 (이미 위에서 분석했으므로 다시 API 호출 없음)
+          const deps = depsResults.find((r) => r.name === info.name)?.deps;
+
+          if (deps) {
+            if (deps.bundleSize) {
+              const sizeKB = (deps.bundleSize.size / 1024).toFixed(1);
+              const gzipKB = (deps.bundleSize.gzip / 1024).toFixed(1);
+              console.log(`  Bundle size: ${sizeKB}KB (${gzipKB}KB gzipped)`);
+            }
+
+            console.log(`  Dependencies: ${Object.keys(deps.dependencies || {}).length}`);
+            console.log(`  Peer Dependencies: ${Object.keys(deps.peerDependencies || {}).length}`);
+          }
+        }
+
+        if (info.homepage) {
+          console.log(`  Homepage: ${info.homepage}`);
+        }
+        console.log('');
       }
 
       console.log(chalk.blue('\nPreset Summary:'));
