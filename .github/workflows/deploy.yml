@@ -78,9 +78,33 @@ jobs:
           echo "$COMMIT_LOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Update CHANGELOG.md
+      - name: Check if tag already exists
+        id: check_tag
         run: |
           NEW_VERSION="${{ steps.version-update.outputs.version }}"
+          if git rev-parse "v$NEW_VERSION" >/dev/null 2>&1; then
+            echo "Tag v$NEW_VERSION already exists"
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          
+            # If tag exists, increment patch version again
+            npm version patch --no-git-tag-version
+            NEW_VERSION=$(node -p "require('./package.json').version")
+            echo "New incremented version: $NEW_VERSION"
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update CHANGELOG.md
+        run: |
+          # Use the possibly incremented version if tag existed
+          if [[ "${{ steps.check_tag.outputs.tag_exists }}" == "true" ]]; then
+            NEW_VERSION="${{ steps.check_tag.outputs.new_version }}"
+          else
+            NEW_VERSION="${{ steps.version-update.outputs.version }}"
+          fi
+          
           COMMIT_LOG="${{ steps.version-update.outputs.commit_log }}"
           DATE=$(date +%Y-%m-%d)
           
@@ -126,9 +150,12 @@ jobs:
           fi
           
           # 변경된 파일 커밋
-          git add CHANGELOG.md
-          git commit -m "Update CHANGELOG.md for version $NEW_VERSION [skip ci]"
-          git tag v$NEW_VERSION
+          git add CHANGELOG.md package.json
+          git commit -m "Update CHANGELOG.md and bump version to $NEW_VERSION [skip ci]"
+          git tag "v$NEW_VERSION"
+          
+          # 최종 사용할 버전 출력
+          echo "final_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Push changes
         run: git push && git push --tags
@@ -138,8 +165,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.version-update.outputs.version }}
-          release_name: Release v${{ steps.version-update.outputs.version }}
+          tag_name: v${{ steps.update_changelog.outputs.final_version || steps.check_tag.outputs.new_version || steps.version-update.outputs.version }}
+          release_name: Release v${{ steps.update_changelog.outputs.final_version || steps.check_tag.outputs.new_version || steps.version-update.outputs.version }}
           draft: false
           prerelease: false
           body: |
